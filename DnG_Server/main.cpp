@@ -208,10 +208,24 @@ int Guess(SOCKET clt) {
 	if (!wcscmp(GuessStr, GuessAnswer)) {
 		// Guess Right
 		cout << "SOCKET: " << clt << ", " << "Guess Right\n";
+		for (auto iter = clt_vec.begin(); iter != clt_vec.end(); iter++) {
+			//if ((*iter) == clt)	continue;
+			cout << "HERE\n";
+			send((*iter), MY_SEND_GUESS_RIGHT, 2, 0);
+			send((*iter), size_buf, 4, 0);
+			send((*iter), buffer, size, 0);
+		}
 	}
 	else {
 		// Guess Wrong
 		cout << "SOCKET: " << clt << ", " << "Guess Wrong\n";
+		for (auto iter = clt_vec.begin(); iter != clt_vec.end(); iter++) {
+			//if ((*iter) == clt)	continue;
+			cout << "HERE\n";
+			send((*iter), MY_SEND_GUESS_WRONG, 2, 0);
+			send((*iter), size_buf, 4, 0);
+			send((*iter), buffer, size, 0);
+		}
 	}
 
 
