@@ -16,6 +16,7 @@ CRITICAL_SECTION ServLock;
 CRITICAL_SECTION BdcLock;
 
 int DrawerNum = 0;
+wchar_t* GuessAnswer = L"≤‚ ‘";
 
 vector<SOCKET> clt_vec;
 //CirQ BdcMsg;
@@ -31,6 +32,7 @@ unsigned long _stdcall Broadcast(void* data);
 unsigned long _stdcall Serv(void* data);	// data is a pointer to this SOCKET 
 
 int DrawLine(SOCKET);
+int Guess(SOCKET);
 
 
 int _tmain(int argc, _TCHAR* argv[]){
@@ -47,7 +49,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 	cout << "Server IP Addr:\n";
 	cin >> ip;
 	if ('0' == ip[0]) {
-		strcpy_s(ip, "192.168.20.102");
+		strcpy_s(ip, "192.168.20.103");
 	}
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(2225);
@@ -124,7 +126,10 @@ unsigned long _stdcall Serv(void* data) {
 		if (!strcmp(send_buf, MY_SEND_DRAW_LINE)) {
 			if (DrawLine(clt)) break;
 		}
-		else {
+		else if (!strcmp(send_buf, MY_SEND_GUESS)) {
+			if (Guess(clt)) break;
+			}
+		else  {
 			// !!!HERE
 		}
 	}
@@ -147,6 +152,7 @@ unsigned long _stdcall Serv(void* data) {
 }
 
 int DrawLine(SOCKET clt) {
+	cout << "DrawLine:\n";
 	char* size_buf = new char[5];
 	size_buf[4] = 0;
 	if (recv(clt, size_buf, 4, 0) <= 0) return 1;
@@ -179,4 +185,38 @@ int DrawLine(SOCKET clt) {
 	}
 	delete[] size_buf;
 	return 0;
+}
+
+int Guess(SOCKET clt) {
+	cout << "Guess:\n";
+	char* size_buf = new char[5];
+	size_buf[4] = 0;
+	if (recv(clt, size_buf, 4, 0) <= 0) return 1;
+
+	unsigned int size = *reinterpret_cast<unsigned int*>(size_buf);
+	cout << "Size: " << size << '\n';
+	char* buffer = new char[size + 3];
+	wchar_t* GuessStr = reinterpret_cast<wchar_t*>(buffer);
+
+	int fragment_size;
+	if ((fragment_size = recv(clt, buffer, size, false)) <= 0) return 1;
+	cout << "fragment_size: " << fragment_size << '\n';
+	//cout << "BEFORE wcout \n";
+	wcout << GuessStr << endl;
+	// Chinese characters received are right but cannot wcout1
+	//cout << "AFTER wcout \n";
+	if (!wcscmp(GuessStr, GuessAnswer)) {
+		// Guess Right
+		cout << "SOCKET: " << clt << ", " << "Guess Right\n";
+	}
+	else {
+		// Guess Wrong
+		cout << "SOCKET: " << clt << ", " << "Guess Wrong\n";
+	}
+
+
+	delete[] buffer;
+	delete[] size_buf;
+	return 0;
+
 }
